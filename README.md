@@ -6,3 +6,5 @@ Live 3D train station ops game. Single `index.html`, Three.js from a CDN, no bui
 - Hold trains for more passengers, dispatch early, send a crew when signals fail.
 - Shift runs 07:52 → 12:00. Keep the mood up, score points, get a grade.
 - Keys: N night · C cinematic · 1/2/3 speed.
+- Match day at Corvane Arena: fans flood in, then flood out at full time. Run Fan Specials.
+- Flights land at the airport: travelers want platform 7. Catch them for bonus points.

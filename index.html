@@ -126,6 +126,7 @@ body.night .btns button.pri{color:#08241a}
 .stp small{font-variant-numeric:tabular-nums}
 #stack{position:absolute;left:50%;top:78px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center}
 #incident,#assign{display:none;align-items:center;gap:14px;padding:8px 10px 8px 16px;border-color:rgba(185,71,58,.45)}#assign{border-color:rgba(47,138,99,.55)}#incident.on,#assign.on{display:flex}#incident span{font-size:20px;color:var(--bad)}#assign span{font-size:20px}#incident b,#assign b{display:block}body.cine #stack,body.over #stack{display:none}
+#evt{display:none;align-items:center;gap:14px;padding:8px 10px 8px 16px;border-color:rgba(201,154,46,.65)}#evt.on{display:flex}#evt b{display:block}
 #end{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:340px;padding:24px;text-align:center;display:none;z-index:20}#end.on{display:block}#end h2{margin:4px 0 0;font-size:26px}#endG{font-size:84px;font-weight:800;line-height:1.1;color:var(--acc);margin:6px 0}#end .kv{text-align:left;margin-bottom:18px}
 #hint{position:absolute;left:14px;bottom:14px;color:#3f4b43;font-size:11.5px;max-width:370px;line-height:1.45;background:rgba(255,255,255,.55);padding:7px 11px;border-radius:12px;pointer-events:none;backdrop-filter:blur(6px)}
 body.night #hint{background:rgba(0,0,0,.35);color:#b9c7be}
@@ -161,6 +162,7 @@ body.cine #left,body.cine #right,body.cine #tracker,body.cine #hint{opacity:.0;p
   </header>
   <div id="stack">
     <div id="assign" class="card"><span>🚆</span><div><b id="asT"></b><small id="asS"></small></div></div>
+    <div id="evt" class="card"><div><b id="evT"></b><small id="evS"></small></div><button id="evB" class="pill">Fan Special</button></div>
     <div id="incident" class="card"><span>⚠</span><div><b id="incT"></b><small id="incS"></small></div><button id="incB" class="pill">Dispatch crew</button></div>
   </div>
   <div id="end" class="card"><small id="endK"></small><h2 id="endT"></h2><div id="endG"></div><dl class="kv" id="endS"></dl><button id="endB" class="pill">Play again</button></div>
@@ -177,7 +179,7 @@ body.cine #left,body.cine #right,body.cine #tracker,body.cine #hint{opacity:.0;p
   </aside>
   <aside id="right" class="card"></aside>
   <footer id="tracker" class="card"></footer>
-  <div id="hint">Drag to orbit · right-drag to pan · scroll to zoom · click a train, platform or vehicle.<br><b>Click a highlighted platform</b> to route a train. In Manual mode trains wait at the signal until you do.<br>Keys: N night · C cinematic · 1/2/3 speed</div>
+  <div id="hint">Drag to orbit · right-drag to pan · scroll to zoom · click a train, platform or vehicle.<br><b>Click a highlighted platform</b> to route a train. In Manual mode trains wait at the signal until you do.<br>Match &amp; flights: see Today in the overview. Keys: N night · C cinematic · 1/2/3 speed</div>
 </div>
 <div id="tip"></div>
 <div id="toast"></div>
@@ -606,7 +608,7 @@ for(const x of [-86,-74,74,86])for(let z=-20;z<=12;z+=14)if(R()<.5)addTree(x,z,.
 }
 // city blocks
 {
-  const ex=[[-82,82,-165,16],[-72,72,12,92],[-190,190,66,88],[-190,190,134,152],[-180,-162,66,152],[162,180,66,152],[-68,68,86,132],[78,132,-92,14],[-138,-76,-102,-42]];
+  const ex=[[-190,-78,4,68],[78,190,4,68],[-82,82,-165,16],[-72,72,12,92],[-190,190,66,88],[-190,190,134,152],[-180,-162,66,152],[162,180,66,152],[-68,68,86,132],[78,132,-92,14],[-138,-76,-102,-42]];
   const blocks=[];
   for(let gx=-190;gx<=190;gx+=26)for(let gz=-160;gz<=146;gz+=26){
     const w=18+R()*5,dd=18+R()*5,x=gx+(R()-.5)*3,z=gz+(R()-.5)*3;
@@ -623,13 +625,142 @@ for(const x of [-86,-74,74,86])for(let z=-20;z<=12;z+=14)if(R()<.5)addTree(x,z,.
   im.castShadow=im2.castShadow=true;im.receiveShadow=true;world.add(im,im2);
 }
 
+/* ============================ STADIUM (west) ============================ */
+const SX=-136,SZ=36;
+const stadium={players:null,pb:[],bctx:null,btex:null,score:[0,0],matchOn:false,ft:false};
+{
+  slab(-172,-100,10,62,.1,0,mat(0xd9cfb6));
+  slab(-102,-76,8,60,.13,0,M.pave2);
+  const ell=(rx,rz,seg=56)=>{const a=[];for(let i=0;i<seg;i++){const t=i/seg*Math.PI*2;a.push(new THREE.Vector2(Math.cos(t)*rx,Math.sin(t)*rz));}return a;};
+  const ring=(ro,ri,h,y,m)=>{const sh=new THREE.Shape(ell(ro[0],ro[1]));sh.holes.push(new THREE.Path(ell(ri[0],ri[1]).reverse()));const g=new THREE.ExtrudeGeometry(sh,{depth:h,bevelEnabled:false});g.rotateX(-Math.PI/2);return mk(g,m,SX,y,SZ);};
+  const seatA=mat(0x2f8a63),seatB=mat(0xd6e4d8);
+  ring([31,21],[28.4,18.9],9,.1,seatA);ring([28.4,18.9],[26.4,17.2],6.4,.1,seatB);ring([26.4,17.2],[25,16],3.6,.1,seatA);
+  ring([34,24],[31,21],12,.1,M.sand);ring([34.4,24.4],[30.6,20.6],.7,12.1,M.sandD);ring([34.5,24.5],[29,19.2],.5,12.8,M.green);
+  const lawn=mk(new THREE.CylinderGeometry(1,1,.3,48),mat(0x7db47a),SX,.15,SZ,world,false,true);lawn.scale.set(25.2,1,15.8);
+  const pt=canvasTex(512,288,(g,w,h)=>{for(let i=0;i<10;i++){g.fillStyle=i%2?'#5f9e5f':'#69a967';g.fillRect(i*w/10,0,w/10,h);}g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;g.strokeRect(10,10,w-20,h-20);g.beginPath();g.moveTo(w/2,10);g.lineTo(w/2,h-10);g.stroke();g.beginPath();g.arc(w/2,h/2,38,0,7);g.stroke();g.strokeRect(10,h/2-60,70,120);g.strokeRect(w-80,h/2-60,70,120);});
+  const pitch=mk(new THREE.PlaneGeometry(34,19),new THREE.MeshStandardMaterial({map:pt,roughness:1}),SX,.32,SZ,world,false,true);pitch.rotation.x=-Math.PI/2;
+  // floodlights
+  const fm=G(mat(0xfff4d6,{emissive:0xffe9b0}),.2,3.5);
+  for(const sx of [-1,1])for(const sz of [-1,1]){const x=SX+sx*30,z=SZ+sz*20;bx(.8,24,.8,M.pole,x,12.1,z);bx(4.2,2.2,1.2,fm,x,24.6,z,world,false,false);}
+  const pm=new THREE.MeshBasicMaterial({map:glowTex,color:0xfff2cc,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});
+  const pl=new THREE.Mesh(new THREE.PlaneGeometry(78,52),pm);pl.rotation.x=-Math.PI/2;pl.position.set(SX,.4,SZ);pl.visible=false;pl.renderOrder=2;world.add(pl);poolList.push({m:pm,o:pl,base:.85});
+  // scoreboard on the gate side
+  const bc=document.createElement('canvas');bc.width=512;bc.height=128;stadium.bctx=bc.getContext('2d');
+  const bt=new THREE.CanvasTexture(bc);bt.colorSpace=THREE.SRGBColorSpace;bt.anisotropy=4;stadium.btex=bt;
+  const bm2=new THREE.MeshStandardMaterial({map:bt,emissiveMap:bt,emissive:0xffffff,roughness:.6});G(bm2,.3,1.2);
+  const bp=mk(new THREE.PlaneGeometry(17,4.25),bm2,SX+34.1,8.6,SZ,world,false,false);bp.rotation.y=Math.PI/2;
+  // players
+  const pms=new THREE.InstancedMesh(new THREE.CapsuleGeometry(.28,.5,2,6),mat(0xffffff,{roughness:.9}),23);pms.frustumCulled=false;pms.count=0;
+  for(let i=0;i<22;i++)pms.setColorAt(i,new THREE.Color(i<11?0x2f8a63:0xe8c25a));pms.setColorAt(22,new THREE.Color(0xffffff));
+  world.add(pms);stadium.players=pms;
+  const form=[[-15,0],[-10,-6],[-10,-2],[-10,2],[-10,6],[-5,-7],[-5,-2.5],[-5,2.5],[-5,7],[-1,-3],[-1,3]];
+  form.forEach(f=>stadium.pb.push(f));form.forEach(f=>stadium.pb.push([-f[0],f[1]]));
+}
+function drawStadiumBoard(){
+  const g=stadium.bctx,w=512,h=128;if(!g)return;
+  g.fillStyle='#16201b';g.fillRect(0,0,w,h);g.fillStyle='#d8aa3c';g.font='700 34px Georgia,serif';g.textAlign='center';g.fillText('CORVANE ARENA',w/2,44);
+  g.fillStyle='#f1f4ef';g.font='700 28px "Courier New",monospace';
+  g.fillText((stadium.matchOn||stadium.ft)?('CORVANE '+stadium.score[0]+' – '+stadium.score[1]+' ALDERMERE'):'MATCH DAY · KO 09:30',w/2,96);
+  stadium.btex.needsUpdate=true;
+}
+drawStadiumBoard();
+function updateStadium(t){
+  const pm=stadium.players;if(!pm)return;
+  if(!stadium.matchOn){pm.count=0;return;}
+  pm.count=23;
+  for(let i=0;i<22;i++){const b=stadium.pb[i];_d.position.set(SX+b[0]+Math.sin(t*.6+i*1.7)*3.5,.85,SZ+b[1]+Math.cos(t*.5+i*2.3)*2.3);_d.scale.set(1,1,1);_d.rotation.set(0,0,0);_d.updateMatrix();pm.setMatrixAt(i,_d.matrix);}
+  _d.position.set(SX+Math.sin(t*.9)*11,.5,SZ+Math.cos(t*1.3)*5);_d.scale.setScalar(.7);_d.updateMatrix();pm.setMatrixAt(22,_d.matrix);pm.instanceMatrix.needsUpdate=true;
+}
+
+/* ============================ AIRPORT (east) ============================ */
+const planes=[],stands=[{x:118,p:null},{x:134,p:null},{x:150,p:null}];let planeT=1;
+{
+  const rw=mat(0x6c6a65),tw=mat(0x7b7870),apr=mat(0xb9b3a4);
+  slab(78,112,8,56,.13,0,M.pave2);
+  slab(96,192,8.5,15.5,.11,0,rw);slab(100,190,18.5,21.5,.1,0,tw);slab(103,106,15.5,18.5,.1,0,tw);slab(181,184,15.5,18.5,.1,0,tw);slab(104,166,21.5,36,.1,0,apr);
+  const d=new THREE.Object3D();
+  const dm=new THREE.InstancedMesh(new THREE.BoxGeometry(1,.02,1),M.line,60);let i=0;
+  for(let x=108;x<184;x+=8){d.position.set(x,.125,12);d.scale.set(4,1,.35);d.updateMatrix();dm.setMatrixAt(i++,d.matrix);}
+  for(let k=-3;k<=3;k++)for(const x of [99,189]){d.position.set(x,.125,12+k*.9);d.scale.set(3,1,.4);d.updateMatrix();dm.setMatrixAt(i++,d.matrix);}
+  dm.count=i;dm.receiveShadow=true;world.add(dm);
+  const lm=G(mat(0xfff0c0,{emissive:0xffd890}),0,4),li=new THREE.InstancedMesh(new THREE.SphereGeometry(.22,6,5),lm,64);i=0;
+  for(let x=98;x<=190;x+=6)for(const z of [8.7,15.3]){d.position.set(x,.3,z);d.scale.set(1,1,1);d.updateMatrix();li.setMatrixAt(i++,d.matrix);}
+  li.count=i;world.add(li);
+  // terminal
+  const tx=131,tz=47;
+  bxb(40,7,14,mat(0xece3cf),tx,0,tz);bxb(42,.9,16,M.green,tx,7,tz);
+  const glass=mat(0x3d5d5b,{emissive:0xffd08a,roughness:.25});G(glass,0,1.3);
+  mk(new THREE.PlaneGeometry(36,3.4),glass,tx,3.1,tz+7.04,world,false,false);
+  const g2=mk(new THREE.PlaneGeometry(36,3.4),glass,tx,3.1,tz-7.04,world,false,false);g2.rotation.y=Math.PI;
+  const sg=canvasTex(512,64,(g,w,h)=>{g.fillStyle='#1f6b4a';g.fillRect(0,0,w,h);g.fillStyle='#f1d98a';g.font='700 38px Georgia,serif';g.textAlign='center';g.textBaseline='middle';g.fillText('CORVANE AIRPORT',w/2,h/2+2);});
+  const sgm=new THREE.MeshStandardMaterial({map:sg,emissiveMap:sg,emissive:0xffffff,roughness:.6});G(sgm,.1,1.0);
+  mk(new THREE.PlaneGeometry(18,2.2),sgm,tx,5.9,tz+7.06,world,false,false);
+  // tower
+  mk(new THREE.CylinderGeometry(1.4,1.8,15,12),M.sandL,162,7.6,48);
+  const cab=mat(0x35524c,{emissive:0xffd08a,roughness:.25});G(cab,.05,1.4);
+  mk(new THREE.CylinderGeometry(3,2.2,2.6,12),cab,162,16.3,48);mk(new THREE.CylinderGeometry(3.4,3.4,.5,12),M.green,162,17.8,48);
+  // car park
+  slab(116,150,58,66,.1,0,mat(0x7f7a70));
+  const cars=new THREE.InstancedMesh(new THREE.BoxGeometry(1.8,1.1,3.6),mat(0xffffff),14);
+  for(let k=0;k<14;k++){d.position.set(118+k*2.3,.7,62);d.scale.set(1,1,1);d.updateMatrix();cars.setMatrixAt(k,d.matrix);cars.setColorAt(k,new THREE.Color(pick([0xe0d6c3,0x7ea58f,0xc9a36e,0xa6b4be,0x5e7a6c])));}
+  cars.castShadow=true;world.add(cars);
+}
+function makePlane(){
+  const g=new THREE.Group();g.rotation.order='YZX';
+  const wh=mat(0xf5f2e9),gr=M.green,dk=mat(0x32413b);
+  const fus=new THREE.CapsuleGeometry(1.15,10,3,12);fus.rotateZ(Math.PI/2);mk(fus,wh,0,0,0,g,true,false);
+  bx(7,.28,2.4,dk,.6,.35,0,g,false,false);
+  for(const s of [-1,1]){const w=bx(3.4,.2,9,wh,-.4,-.35,s*5.2,g,true,false);w.rotation.y=-s*.5;
+    mk(new THREE.CylinderGeometry(.5,.5,2.2,10).rotateZ(Math.PI/2),dk,.4,-1.2,s*3.6,g,false,false);
+    bx(1.5,.15,2.6,wh,-5.3,.9,s*1.6,g,false,false);}
+  bx(2.6,3.2,.22,gr,-5,2.3,0,g,true,false);
+  return g;
+}
+function paintPlane(p){p.g.position.set(p.x,p.y+1.9,p.z);p.g.rotation.set(0,p.h,p.pitch);}
+function addPlane(x,y,z,h,wp,stand){const g=makePlane();scene.add(g);const p={g,x,y,z,h,pitch:0,v:0,wp:wp||null,wi:0,stand:stand||null,parked:!wp,remove:false};planes.push(p);paintPlane(p);return p;}
+stands[0].p=addPlane(118,0,28,-Math.PI/2,null,stands[0]);stands[1].p=addPlane(134,0,28,-Math.PI/2,null,stands[1]);
+function landPlane(){
+  if(planes.length>6)return;
+  const st=stands.find(s=>!s.p);
+  const wp=[[180,.4,12,62],[160,0,12,36],[112,0,12,14],[106,0,15.5,7],[106,0,19.5,7]];
+  if(st)wp.push([st.x,0,19.5,7],[st.x,0,24,4],[st.x,0,28,2]);
+  const p=addPlane(330,34,12,Math.PI,wp,st);p.v=62;p.parked=false;p.remove=!st;if(st)st.p=p;
+}
+function takeoffPlane(){
+  const st=stands.find(s=>s.p&&s.p.parked);if(!st)return;const p=st.p;
+  p.parked=false;st.p=null;p.stand=null;p.remove=true;p.v=0;p.wi=0;
+  p.wp=[[st.x,0,24,5],[st.x,0,19.5,8],[106,0,19.5,9],[106,0,15.5,6],[112,0,12,5],[172,0,12,48],[205,9,12,64],[300,52,12,70]];
+}
+function updatePlanes(dt){
+  for(let i=planes.length-1;i>=0;i--){
+    const p=planes[i];if(!p.wp)continue;
+    const w=p.wp[p.wi];
+    if(!w){if(p.remove){scene.remove(p.g);planes.splice(i,1);}else{p.parked=true;p.wp=null;p.v=0;p.pitch=0;paintPlane(p);}continue;}
+    const dx=w[0]-p.x,dy=w[1]-p.y,dz=w[2]-p.z,d=Math.hypot(dx,dy,dz);
+    p.v+=clamp(w[3]-p.v,-14*dt,10*dt);
+    const m=Math.max(p.v,3)*dt;
+    if(d<=m+.05){p.x=w[0];p.y=w[1];p.z=w[2];p.wi++;}
+    else{
+      p.x+=dx/d*m;p.y+=dy/d*m;p.z+=dz/d*m;
+      const th=Math.atan2(-dz,dx);let da=th-p.h;while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+      p.h+=da*Math.min(1,dt*2.5);
+      p.pitch+=(Math.atan2(dy,Math.hypot(dx,dz)||1)-p.pitch)*Math.min(1,dt*3);
+    }
+    paintPlane(p);
+  }
+}
+function planeAmbient(dt){
+  planeT-=dt/3;
+  if(planeT<=0){planeT=rnd(2.5,4.5);if(planes.length<5){if(Math.random()<.5&&stands.some(s=>!s.p))landPlane();else takeoffPlane();}}
+}
+
 /* ============================ SIM STATE ============================ */
 let T=7*60+30,speed=1,night=0,nightTarget=0;
 const PH={APP:'Approaching',ARR:'Arriving',ARRD:'Arrived',CLN:'Cleaned',BRD:'Boarding',CLS:'Doors close',DEP:'Departed'};
 const trains=[],parked=[],vehicles=[],people=[];
 const trackBusy=new Array(15).fill(null);
 const blocked=[0,0,0,0];let score=0,nextEvent=T+16,incident=null,manual=true,warm=true,sat=75;
-const game={deps:0,late:0,pax:0,auto:0,over:false};const AUTO_WAIT=7,SHIFT_END=12*60;
+const game={deps:0,late:0,pax:0,auto:0,fans:0,air:0,autoUsed:false,over:false};const AUTO_WAIT=7,SHIFT_END=12*60;
 let services=[],svcGen=0,svcId=4100,hsId=701,nextRegT=T+2,nextHsT=T+30;
 const CITIES=['Aldermere','Port Valen','Kestrel Falls','Brindle','Oakhaven','Marrow Bay','Sundale','Thornwick','Velden','Harrowgate','Lindenholt','Quarry Cross'];
 let alerts=[],unread=0;
@@ -693,7 +824,7 @@ function createTrain(svc,track){
   const tr={kind:'train',svc,track,plat:Math.ceil(track/2),side:track%2?1:-1,main:mainFor(track),path:PATHS[track],n:svc.cars,s:0,v:0,phase:PH.APP,tPhase:T,times:{},pickMeshes:[],cars:[],loads:[],removed:false,alightQ:[],boarded:0,alighted:0,stopS:sAtZ(PATHS[track],ZSTOP-(svc.kind==='express'?2.2:0)),express:svc.kind==='express'};
   tr.root=new THREE.Group();scene.add(tr.root);
   for(let k=0;k<tr.n;k++){const c=makeCarGroup(svc.kind,k,tr.n,tr.pickMeshes,tr);tr.root.add(c.g);tr.cars.push(c);tr.loads.push(rnd(.55,.95));}
-  tr.targetLoad=rnd(.45,.9);tr.paxIn=Math.round(tr.loads.reduce((a,b)=>a+b,0)*svc.cap);
+  tr.targetLoad=rnd(.45,.9);if(svc.special){tr.loads=tr.loads.map(()=>rnd(.03,.1));tr.targetLoad=.95;}tr.paxIn=Math.round(tr.loads.reduce((a,b)=>a+b,0)*svc.cap);
   tr.s=0;placeTrain(tr);trains.push(tr);return tr;
 }
 function placeTrain(tr){
@@ -781,13 +912,13 @@ function removeTrain(tr){
 }
 
 /* ============================ PEOPLE ============================ */
-const MAXP=560;
+const MAXP=720;
 const pBody=new THREE.InstancedMesh(new THREE.CapsuleGeometry(.27,.55,2,6),mat(0xffffff,{roughness:.9}),MAXP);
 const pHead=new THREE.InstancedMesh(new THREE.SphereGeometry(.2,8,6),mat(0xffffff,{roughness:.9}),MAXP);
 for(const m of [pBody,pHead]){m.frustumCulled=false;m.castShadow=true;m.count=0;world.add(m);}
 const shirts=[0x1f6b4a,0xd8aa3c,0xb9573f,0x3f6e8c,0xe9e1cf,0x6c5a8f,0x2e3b36,0xcf8f7a,0x7aa37f],skins=[0xf1c9a5,0xd9a27b,0xa86f4c,0x7a4b32,0xe8b894];
 const _col=new THREE.Color(),_d=new THREE.Object3D();
-const taxiQ=[],busWait=[],platWait=[[],[],[],[],[],[],[],[]];
+const fanWait=[],taxiQ=[],busWait=[],platWait=[[],[],[],[],[],[],[],[]];
 let cross={blvd:false,top:false};
 function gy(x,z){if(z<6.4&&z>-43){const n=clamp(Math.round((x+60)/20)+1,1,7);if(Math.abs(x-PX(n))<3.3)return .9;}return .12;}
 function addPerson(x,z,path,onEnd,o={}){
@@ -798,7 +929,7 @@ function addPerson(x,z,path,onEnd,o={}){
 }
 function removePerson(p){
   if(!p.alive)return;p.alive=false;
-  for(const q of [taxiQ,busWait,...platWait]){const i=q.indexOf(p);if(i>=0)q.splice(i,1);}
+  for(const q of [taxiQ,busWait,fanWait,...platWait]){const i=q.indexOf(p);if(i>=0)q.splice(i,1);}
   const last=people[people.length-1],i=p.idx;
   if(last!==p){people[i]=last;last.idx=i;pBody.setColorAt(i,_col.setHex(last.tint));pHead.setColorAt(i,_col.setHex(last.skin));pBody.instanceColor.needsUpdate=pHead.instanceColor.needsUpdate=true;}
   people.pop();
@@ -844,6 +975,7 @@ function doorWorld(tr,k,d){samplePath(tr.path,tr.s-CARLEN/2-k*PITCH+(d?1.25:-1.2
 function alightPerson(tr,k,d){
   doorWorld(tr,k,d);const tx=TRACK_X(tr.track),z0=doorPos.z;
   const lane=tx+tr.side*(3.5+rnd(0,1.4)),hx=rnd(-5,5);
+  if(inboundOn()&&Math.random()<.45){addPerson(tx+tr.side*1.9,z0,[[lane,z0],[lane,6.8],[lane,10.6],[-80,12.5],[-87,26],[-96,36],[-100,38]],p=>{if(!warm){score+=1;game.fans++;}removePerson(p);},{fan:true});stats.lastAl=(stats.lastAl||0)+1;return;}
   const r=Math.random();const dest=r<.38&&taxiQ.length<8?'taxi':r<.6?'bus':'plaza';
   const path=[[lane,z0],[lane,6.8],[lane,10.4],[hx,12.2],[hx,16],[hx,31],[hx,36.5]];
   addPerson(tx+tr.side*1.9,z0,path,p=>{
@@ -883,14 +1015,13 @@ function commuter(){
   const wz=rnd(-36,0);path.push([lane,wz]);
   const p=addPerson(sx,sz,path,q=>{q.mode='wait';q.platN=n;q.wx=lane;q.wz=wz;q.path=[];q.pi=0;platWait[n].push(q);});
 }
+function boardCb(tr){return q=>{tr.boarded++;if(!warm){if(q.fan){score+=2;game.fans++;}if(q.air){score+=3;game.air++;}}removePerson(q);};}
 function boardWaiting(tr){
-  const list=platWait[tr.plat],tx=TRACK_X(tr.track);
-  const take=Math.min(list.length,tr.express?30:14);
-  for(let i=0;i<take;i++){
-    const p=list.shift();if(!p)break;
-    const k=rint(0,tr.n-1),d=rint(0,1);doorWorld(tr,k,d);const z=doorPos.z;
-    p.mode='path';setPath(p,[[tx+tr.side*3.6,clamp(z+rnd(-1,1),-40,5)],[tx+tr.side*1.6,z]],q=>{tr.boarded++;removePerson(q);});
-  }
+  const list=platWait[tr.plat],tx=TRACK_X(tr.track),cb=boardCb(tr);
+  const take=Math.min(list.length,(tr.express||tr.svc.special)?30:14);
+  for(let i=0;i<take;i++){const p=list.shift();if(!p)break;const k=rint(0,tr.n-1),d=rint(0,1);doorWorld(tr,k,d);const z=doorPos.z;p.mode='path';setPath(p,[[tx+tr.side*3.6,clamp(z+rnd(-1,1),-40,5)],[tx+tr.side*1.6,z]],cb);}
+  const ft=Math.min(fanWait.length,tr.svc.special?45:3);
+  for(let i=0;i<ft;i++){const p=fanWait.shift();if(!p)break;const k=rint(0,tr.n-1),d=rint(0,1);doorWorld(tr,k,d);const z=doorPos.z,lane=tx+tr.side*rnd(2.6,4.4);p.mode='path';setPath(p,[[lane,10.6],[lane,6.8],[lane,clamp(z+rnd(-1,1),-40,5)],[tx+tr.side*1.6,z]],cb);}
 }
 function updateAlighting(dt){
   for(const tr of trains){
@@ -988,12 +1119,13 @@ function initAmbientTraffic(){
 /* ============================ SIM STEP ============================ */
 function simStep(dt){
   T+=dt/3;
+  runSched();runEvents();updatePlanes(dt);planeAmbient(dt);
   if(!warm&&T>=nextEvent){nextEvent=T+rnd(18,30);if(!incident){const m=rint(0,2);incident={m,until:T+rnd(7,10)};blocked[m]=blocked[m+1]=incident.until;pushAlert('Signal failure on main lines '+(m+1)+'–'+(m+2)+' — trains rerouted','b');toast('⚠ Signal failure — dispatch a crew!');}}
   if(incident&&T>=incident.until){incident=null;pushAlert('Signal failure cleared (auto-repair)','w');score-=30;}
   if(svcGen<T){svcGen=T+60;genServices(T+200);services=services.filter(s=>!(s.done&&!s.train&&s.sched<T-20));}
   spawnServices();
   if(!warm){let pend=0,crowd=0,holds=0;for(const s of services)if(s.pending&&!s.spawned&&!s.done&&!s.forced&&T-s.pendAt>1)pend++;for(let i=1;i<8;i++)crowd+=platWait[i].length;for(const t of trains)if(t.hold)holds++;
-    let d=-pend*.9-(crowd>34?.4:0)-(incident?.5:0)-holds*.5;if(!pend&&!incident&&!holds)d+=.35;sat=clamp(sat+d*dt/3,0,100);}
+    let d=-pend*.9-(crowd>34?.4:0)-(fanWait.length>25?.9:0)-(incident?.5:0)-holds*.5;if(!pend&&!incident&&!holds)d+=.35;sat=clamp(sat+d*dt/3,0,100);}
   for(const tr of trains)updateTrain(tr,dt);
   for(let i=trains.length-1;i>=0;i--)if(trains[i].removed)removeTrain(trains[i]);
   updateAlighting(dt);spawnPeople(dt);updatePeople(dt);
@@ -1319,7 +1451,7 @@ function renderPanel(){
   const el=$('right');
   if(!sel){
     const nxt=services.filter(s=>!s.spawned&&!s.done).slice(0,3);
-    el.innerHTML='<div class="ph"><div><small>Station overview</small><h3>Corvane Central</h3><p>7 platforms · 14 tracks · 4 main lines</p></div></div><div class="kv" style="margin-top:14px"><dt>Trains on tracks</dt><dd>'+trains.length+'</dd><dt>People on site</dt><dd>'+people.length+'</dd><dt>Vehicles</dt><dd>'+vehicles.length+'</dd></div><div style="margin-top:14px"><small>Next arrivals</small>'+nxt.map(s=>'<div class="kv" style="border:0;padding:6px 0 0"><dt><b style="color:var(--ink)">'+s.no+'</b> '+s.city+'</dt><dd>'+fmtT(s.sched+Math.max(s.delay,0))+'</dd></div>').join('')+'</div><p style="margin-top:14px;font-size:12px">Select a train, platform or vehicle to inspect it.</p>';
+    el.innerHTML='<div class="ph"><div><small>Station overview</small><h3>Corvane Central</h3><p>7 platforms · 14 tracks · 4 main lines</p></div></div><div class="kv" style="margin-top:14px"><dt>Trains on tracks</dt><dd>'+trains.length+'</dd><dt>People on site</dt><dd>'+people.length+'</dd><dt>Vehicles</dt><dd>'+vehicles.length+'</dd></div><div style="margin-top:14px"><small>Next arrivals</small>'+nxt.map(s=>'<div class="kv" style="border:0;padding:6px 0 0"><dt><b style="color:var(--ink)">'+s.no+'</b> '+s.city+'</dt><dd>'+fmtT(s.sched+Math.max(s.delay,0))+'</dd></div>').join('')+'</div>'+todayRows()+'<p style="margin-top:14px;font-size:12px">Select a train, platform or vehicle to inspect it.</p>';
     return;
   }
   if(sel.kind==='train'&&sel.parked){el.innerHTML='<div class="ph"><div><small>Depot</small><h3>'+sel.name.split(' · ')[0]+'</h3><p>Stabled on a depot siding</p></div><button class="x" data-act="close">×</button></div><div class="kv" style="margin-top:14px"><dt>Cars</dt><dd>'+sel.n+'</dd><dt>Status</dt><dd>Stabled</dd><dt>Next duty</dt><dd>Spare</dd></div>';return;}
@@ -1366,6 +1498,45 @@ function renderTracker(){
   +STEPS.map((s,i)=>'<div class="stp '+(i<idx||(i===4&&idx===4)?'done':i===idx?'cur':'')+'"><div class="pt"></div><b>'+s[0]+'</b><small>'+(tr.times[s[1]]!==undefined?fmtTS(tr.times[s[1]]):'—')+'</small></div>').join('')+'</div>';
 }
 
+/* ============================ EVENTS: STADIUM & AIRPORT ============================ */
+const sched=[];
+function later(m,fn){sched.push({t:T+m,fn});}
+function runSched(){for(let i=sched.length-1;i>=0;i--)if(T>=sched[i].t){const f=sched[i].fn;sched.splice(i,1);f();}}
+const FLIGHTS=[{t:8*60+58,n:24,no:'CV214'},{t:9*60+42,n:30,no:'CV350'},{t:10*60+26,n:34,no:'CV118'},{t:11*60+10,n:40,no:'CV772'}];
+const KO=9*60+30,FT=11*60+5,GOALS=[[9*60+52,0],[10*60+20,1],[10*60+48,0],[11*60+1,0]];
+const evState={specials:3,msg:null,pre:false,ko:false,w10:false,ft:false,goal:0};
+function setEvt(title,sub,btn,dur){evState.msg={title,sub,btn,until:T+dur};}
+function inboundOn(){return !warm&&T>=8*60+50&&T<KO-2;}
+function spawnFan(){
+  if(people.length>MAXP-12)return;
+  const x=rnd(-44,40);
+  addPerson(-98,rnd(33,39),[[-87,26],[-80,13],[x,12.4]],q=>{q.mode='fan';fanWait.push(q);},{fan:true,speed:rnd(2.6,3.4)});
+}
+function spawnTraveler(){
+  if(people.length>MAXP-12)return;
+  const lane=PX(7)+rnd(-2.3,2.3),wz=rnd(-36,0);
+  addPerson(104,rnd(44,48),[[88,32],[80,13],[lane,11],[lane,6.8],[lane,wz]],q=>{q.mode='wait';q.platN=7;q.wx=lane;q.wz=wz;q.path=[];q.pi=0;platWait[7].push(q);},{air:true,speed:rnd(2.1,2.7),tint:0x6c5a8f});
+}
+function runEvents(){
+  if(warm)return;
+  for(const f of FLIGHTS)if(!f.done&&T>=f.t-2){f.done=true;landPlane();for(let i=0;i<f.n;i++)later(2.4+rnd(0,2.4),spawnTraveler);pushAlert('✈ '+f.no+' landed — '+f.n+' travelers heading for platform 7');setEvt('✈ '+f.no+' has landed','About '+f.n+' travelers walk to platform 7 — get a train there (+3 each)',false,9);}
+  if(!evState.pre&&T>=8*60+50){evState.pre=true;pushAlert('⚽ Match day: fans heading to Corvane Arena');setEvt('⚽ Match day','Fans are heading to the arena — +1 each delivered',false,12);}
+  if(!evState.ko&&T>=KO){evState.ko=true;stadium.matchOn=true;drawStadiumBoard();pushAlert('⚽ Kick-off at Corvane Arena');}
+  while(evState.goal<GOALS.length&&T>=GOALS[evState.goal][0]){stadium.score[GOALS[evState.goal][1]]++;evState.goal++;drawStadiumBoard();toast('⚽ GOAL! Corvane '+stadium.score[0]+' – '+stadium.score[1]);}
+  if(!evState.w10&&T>=FT-10){evState.w10=true;pushAlert('Full time in 10 min — a crowd of fans will hit the station','w');setEvt('⚽ Final whistle soon','Keep platforms free and be ready to run a Fan Special',false,9);}
+  if(!evState.ft&&T>=FT){evState.ft=true;stadium.matchOn=false;stadium.ft=true;drawStadiumBoard();pushAlert('⚽ Full time — about 140 fans heading for the station','w');for(let i=0;i<140;i++)later(rnd(0,5),spawnFan);setEvt('⚽ Full time',()=>fanWait.length+' fans waiting in the concourse · +2 each boarded',true,40);}
+}
+$('evB').onclick=()=>{
+  if(evState.specials<=0)return;evState.specials--;
+  const s={id:svcId+=2,no:'FS '+svcId,kind:'regional',city:'Fan Special',sched:T,delay:0,cars:8,cap:95,special:true,train:null,done:false,forced:0,spawned:false,platform:0};
+  services.push(s);services.sort((a,b)=>a.sched-b.sched);toast('Fan Special added — route it to a platform');pushAlert('Fan Special requested');
+};
+function todayRows(){
+  const rows=FLIGHTS.map(f=>[f.t,'✈ '+f.no+' · '+f.n+' pax',!!f.done]);
+  rows.push([KO,'⚽ Kick-off',evState.ko],[FT,'⚽ Full time · crowd exits',evState.ft]);rows.sort((a,b)=>a[0]-b[0]);
+  return '<div style="margin-top:14px"><small>Today</small>'+rows.map(r=>'<div class="kv" style="border:0;padding:6px 0 0;opacity:'+(r[2]?.45:1)+'"><dt>'+r[1]+'</dt><dd>'+fmtT(r[0])+'</dd></div>').join('')+'</div>';
+}
+
 /* ============================ MAIN LOOP ============================ */
 function warmup(){
   initAmbientTraffic();
@@ -1373,7 +1544,7 @@ function warmup(){
   const steps=Math.round(22*3/.25);
   for(let i=0;i<steps;i++)simStep(.25);
   for(const tr of trains)placeTrain(tr);
-  warm=false;score=0;sat=75;incident=null;blocked.fill(0);nextEvent=T+14;Object.assign(game,{deps:0,late:0,pax:0,auto:0,over:false});
+  warm=false;score=0;sat=75;incident=null;blocked.fill(0);nextEvent=T+14;Object.assign(game,{deps:0,late:0,pax:0,auto:0,fans:0,air:0,over:false});
   for(const s of services)if(s.pending&&!s.spawned)s.pendAt=T;
 }
 T=7*60+30;
@@ -1394,6 +1565,7 @@ function frame(nowMs){
   paintPeople();
   // night
   if(Math.abs(night-nightTarget)>.001){night+=(nightTarget-night)*Math.min(1,dt*2.6);if(Math.abs(night-nightTarget)<.004)night=nightTarget;applyNight(night);}
+  updateStadium(time);
   // fountain
   for(let i=0;i<44;i++){const p=dropPh[i],t=(time*.8+p[0])%1,r=.3+p[2]*t*.9,y=2.9+4.6*t*(1-t)*2.2;_d.position.set(Math.cos(p[1])*r,y,58+Math.sin(p[1])*r);_d.scale.set(1,1,1);_d.rotation.set(0,0,0);_d.updateMatrix();droplets.setMatrixAt(i,_d.matrix);}
   droplets.instanceMatrix.needsUpdate=true;
@@ -1431,18 +1603,21 @@ function updateScore(){
   const pend=services.filter(s=>s.pending&&!s.spawned&&!s.done&&!s.forced);const need=manual&&!warm&&pend.length>0;
   const as=$('assign');
   if(need){const s=pend[0];as.classList.add('on');$('asT').textContent=s.no+' · '+s.city+' needs a platform'+(pend.length>1?' (+'+(pend.length-1)+' waiting)':'');$('asS').textContent='Click a highlighted platform · auto-routes in '+Math.max(0,Math.ceil(AUTO_WAIT-(T-s.pendAt)))+' min (−25)';}else as.classList.remove('on');
+  const ev=evState.msg,eb=$('evt');
+  if(ev&&!warm&&T<ev.until&&(!ev.btn||fanWait.length>10||T<FT+6)){eb.classList.add('on');$('evT').textContent=ev.title;$('evS').textContent=typeof ev.sub==='function'?ev.sub():ev.sub;const b=$('evB');b.style.display=ev.btn&&evState.specials>0?'':'none';b.textContent='Fan Special ('+evState.specials+' left)';}else eb.classList.remove('on');
   for(const p of platEnts){if(p!==hov)setOutline(p,need&&platformFree(p.n));}
   if(!game.over&&!warm&&(T>=SHIFT_END||sat<=0)){game.over=true;showEnd(sat<=0);}
 }
 function showEnd(melt){
   let best=0;try{best=+localStorage.getItem('railgrid_best')||0;if(score>best){best=score;localStorage.setItem('railgrid_best',String(best));}}catch(e){best=Math.max(best,score);}
-  const g=melt?'F':score>=6000?'S':score>=4800?'A':score>=3500?'B':score>=2200?'C':'D';
-  $('endK').textContent=melt?'Shift aborted':'Shift complete';$('endT').textContent=melt?'Station meltdown':'Corvane Central · 07:52–12:00';$('endG').textContent=g;
-  $('endS').innerHTML='<dt>Score</dt><dd>'+score.toLocaleString('en-US')+'</dd><dt>Best</dt><dd>'+best.toLocaleString('en-US')+'</dd><dt>Departures</dt><dd>'+game.deps+' ('+(game.deps-game.late)+' on time)</dd><dt>Passengers moved</dt><dd>'+game.pax.toLocaleString('en-US')+'</dd><dt>Auto-routed (missed)</dt><dd>'+game.auto+'</dd><dt>Final mood</dt><dd>'+Math.round(sat)+'</dd>';
+  let g=melt?'F':score>=6800?'S':score>=5400?'A':score>=3900?'B':score>=2500?'C':'D';
+  if(game.autoUsed&&(g==='S'||g==='A'))g='B';
+  $('endK').textContent=game.autoUsed&&!melt?'Shift complete · Auto assist used (grade capped at B)':melt?'Shift aborted':'Shift complete';$('endT').textContent=melt?'Station meltdown':'Corvane Central · 07:52–12:00';$('endG').textContent=g;
+  $('endS').innerHTML='<dt>Score</dt><dd>'+score.toLocaleString('en-US')+'</dd><dt>Best</dt><dd>'+best.toLocaleString('en-US')+'</dd><dt>Departures</dt><dd>'+game.deps+' ('+(game.deps-game.late)+' on time)</dd><dt>Passengers moved</dt><dd>'+game.pax.toLocaleString('en-US')+'</dd><dt>Fans / travelers moved</dt><dd>'+game.fans+' / '+game.air+'</dd><dt>Auto-routed (missed)</dt><dd>'+game.auto+'</dd><dt>Final mood</dt><dd>'+Math.round(sat)+'</dd>';
   $('end').classList.add('on');document.body.classList.add('over');
 }
 $('endB').onclick=()=>location.reload();
-$('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;manual=b.dataset.m==='manual';[...$('mode').children].forEach(x=>x.classList.toggle('on',x===b));toast(manual?'Manual dispatch — you route the trains':'Auto-dispatch — trains route themselves');});
+$('mode').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;manual=b.dataset.m==='manual';if(!manual)game.autoUsed=true;[...$('mode').children].forEach(x=>x.classList.toggle('on',x===b));toast(manual?'Manual dispatch — you route the trains':'Auto-dispatch — trains route themselves');});
 $('incB').onclick=()=>{if(!incident)return;blocked[incident.m]=blocked[incident.m+1]=0;incident=null;score+=40;toast('Crew dispatched — lines clear (+40)');pushAlert('Signal failure cleared by crew');updateScore();};
 function boardMaintenance(now){
   boardPageT+=.5;
@@ -1451,7 +1626,7 @@ function boardMaintenance(now){
 }
 drawClock(T);applyNight(0);renderTabs();updateKPIs();renderPanel();renderTracker();
 requestAnimationFrame(frame);
-window.__railgrid={step(n){for(let i=0;i<n;i++)simStep(.25)},assignPlatform,game,get sat(){return sat},get warm(){return warm},fireIncident(){nextEvent=T;},get score(){return score},get incident(){return incident},boardRows,departuresList,get T(){return T},trains,people,vehicles,services,select,startCine,ctl,camera,renderer};
+window.__railgrid={fanWait,platWait,stadium,planes,evState,jump(t){T=t;},step(n){for(let i=0;i<n;i++)simStep(.25)},assignPlatform,game,get sat(){return sat},get warm(){return warm},fireIncident(){nextEvent=T;},get score(){return score},get incident(){return incident},boardRows,departuresList,get T(){return T},trains,people,vehicles,services,select,startCine,ctl,camera,renderer};
 </script>
 </body>
 </html>
